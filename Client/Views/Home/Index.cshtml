@@ -1,0 +1,120 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+    Layout = null;
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Account Balance</title>
+    <link href="~/lib/bootstrap/dist/css/bootstrap.css" rel="stylesheet" />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+
+        .popup {
+            display: none;
+            position: fixed;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: 300px;
+            border: 1px solid #ccc;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            background-color: white;
+            z-index: 1000;
+        }
+
+        .popup-header {
+            background-color: #f1f1f1;
+            padding: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .popup-content {
+            padding: 10px;
+        }
+
+        .popup-footer {
+            padding: 10px;
+            text-align: center;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        #okBtn {
+            padding: 5px 10px;
+        }
+    </style>
+</head>
+<body>
+    <table id="accountTable" class="table table-primary table-striped">
+        <tr>
+            <th>Top Level Account</th>
+            <th>Total Balance</th>
+        </tr>
+    </table>
+
+    <div id="popup" class="popup">
+        <div class="popup-header">
+            <span>Details</span>
+            <button id="closePopupBtn" class="close-btn">&times;</button>
+        </div>
+        <div class="popup-content" id="popupContent"></div>
+        <div class="popup-footer">
+            <button id="okBtn">Ok</button>
+        </div>
+    </div>
+
+    <script>
+        $(document).ready(function () {
+            // Fetch and display the top-level accounts
+            $.ajax({
+                url: 'https://localhost:7256/api/Accounts/top-level-accounts',
+                method: 'GET',
+                success: function (data) {
+                    let table = $('#accountTable');
+                    for (let account in data) {
+                        let row = `<tr data-id="${account}">
+                                            <td>${account}</td>
+                                            <td>${data[account]}</td>
+                                        </tr>`;
+                        table.append(row);
+                    }
+                }
+            });
+
+            // Event listener for double-clicking a table row
+            $('#accountTable').on('dblclick', 'tr', function () {
+                let accountId = $(this).data('id');
+                $.ajax({
+                    url: `https://localhost:7256/api/Accounts/account-details/${accountId}`,
+                    method: 'GET',
+                    success: function (details) {
+                        // Process the returned list of strings
+                        let content = '';
+                        details.forEach(detail => {
+                            content += `<p>${detail}</p>`;
+                        });
+                        $('#popupContent').html(content);
+                        $('#popup').show();
+                    }
+                });
+            });
+
+            // Close the popup when the close button or OK button is clicked
+            $('#closePopupBtn, #okBtn').click(function () {
+                $('#popup').hide();
+            });
+        });
+    </script>
+</body>
+</html>
